@@ -13,8 +13,15 @@ return Application::configure(basePath: dirname(__DIR__))
     commands: __DIR__.'/../routes/console.php',
     health: '/up',
 )
-    ->withMiddleware(function (Middleware $middleware): void {
-        //
+   ->withMiddleware(function (Middleware $middleware) {
+        // トンネルを信頼する
+        $middleware->trustProxies(at: '*');
+
+        // チャット通信だけ、セキュリティチェック（CSRF）を免除する
+        $middleware->validateCsrfTokens(except: [
+            'api/*',
+            'chat/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

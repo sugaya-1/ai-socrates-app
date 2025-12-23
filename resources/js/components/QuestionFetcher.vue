@@ -138,10 +138,16 @@
       <div v-if="!isSufficient" class="fade-in w-full">
         <div class="flex items-end space-x-3 relative max-w-3xl mx-auto">
           <div class="flex-1 relative">
-            <textarea v-model="inputAnswer" @keydown.enter.prevent.exact="handleSend" :disabled="isSending || isLoading"
-              rows="1" ref="textareaRef" @input="resizeTextarea"
-              class="w-full p-4 pr-12 max-h-32 min-h-[56px] bg-slate-800/60 border border-cyan-500/30 rounded-xl focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition-all resize-none disabled:opacity-50 text-cyan-50 placeholder-cyan-500/30 text-base shadow-inner font-sans backdrop-blur-md focus:bg-slate-800/90"
-              placeholder="あなたの思考を記述..."></textarea>
+            <textarea
+                v-model="inputAnswer"
+                @keydown.enter="handleEnterKey"
+                :disabled="isSending || isLoading"
+                rows="1"
+                ref="textareaRef"
+                @input="resizeTextarea"
+                class="w-full p-4 pr-12 max-h-32 min-h-[56px] bg-slate-800/60 border border-cyan-500/30 rounded-xl focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition-all resize-none disabled:opacity-50 text-cyan-50 placeholder-cyan-500/30 text-base shadow-inner font-sans backdrop-blur-md focus:bg-slate-800/90"
+                placeholder="あなたの思考を記述... (Shift+Enterで改行)"
+                ></textarea>
             <div
               class="absolute bottom-4 right-4 text-[10px] text-cyan-600/50 font-mono hidden md:block pointer-events-none">
               RETURN ↵
@@ -271,7 +277,8 @@ const fetchNextQuestion = async () => {
   error.value = null;
   scrollToBottom();
   try {
-    const API_URL = `http://localhost/api/topics/${currentTopicId.value}/next-question`;
+    // 先頭の http://localhost を消して / から始める
+    const API_URL = `/api/topics/${currentTopicId.value}/next-question`;
     const response = await axios.get(API_URL);
     const data = response.data;
     currentQuestionId.value = data.id;
@@ -300,7 +307,8 @@ const handleSend = async () => {
   history.value.push({ sender: 'user', type: 'answer', text: text, question_id: currentQuestionId.value });
   scrollToBottom();
   try {
-    const API_URL = `http://localhost/api/questions/${currentQuestionId.value}/check`;
+    // 先頭の http://localhost を消して / から始める
+    const API_URL = `/api/questions/${currentQuestionId.value}/check`;
     const response = await axios.post(API_URL, { answer_text: text });
     const data = response.data;
     history.value.push({ sender: 'ai', type: 'feedback', text: data.explanation, question_id: currentQuestionId.value, is_correct: data.is_correct });
@@ -319,6 +327,23 @@ const handleSend = async () => {
 const askOracle = () => {
   inputAnswer.value = "知恵を借してくれないか？";
   handleSend();
+};
+
+const handleEnterKey = (e) => {
+  // 【最重要】IME変換中（日本語入力中）なら何もしない
+  // これがないと、漢字変換の確定エンターで送信されてしまいます
+  if (e.isComposing || e.keyCode === 229) {
+    return;
+  }
+
+  // Shiftキーが押されているなら、通常の「改行」動作をさせる
+  if (e.shiftKey) {
+    return; // 何もしない＝ブラウザ標準の改行が入る
+  }
+
+  // それ以外（変換中でもなく、Shiftも押していないEnter）なら送信
+  e.preventDefault(); // 改行が入らないように止める
+  handleSend();       // 送信実行
 };
 </script>
 
