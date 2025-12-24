@@ -3,20 +3,20 @@
     class="w-full max-w-4xl h-[80vh] md:h-[85vh] bg-slate-900/70 backdrop-blur-xl rounded-2xl shadow-[0_0_50px_rgba(6,182,212,0.1)] flex flex-col overflow-hidden relative border border-cyan-500/20 z-10 transition-all duration-500 ring-1 ring-white/5">
 
     <div
-      class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-cyan-500/30 rounded-tl-lg pointer-events-none">
+      class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 rounded-tl-lg pointer-events-none border-cyan-500/30">
     </div>
     <div
-      class="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-cyan-500/30 rounded-tr-lg pointer-events-none">
+      class="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 rounded-tr-lg pointer-events-none border-cyan-500/30">
     </div>
     <div
-      class="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-cyan-500/30 rounded-bl-lg pointer-events-none">
+      class="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 rounded-bl-lg pointer-events-none border-cyan-500/30">
     </div>
     <div
-      class="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-cyan-500/30 rounded-br-lg pointer-events-none">
+      class="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 rounded-br-lg pointer-events-none border-cyan-500/30">
     </div>
 
     <header
-      class="py-4 px-6 border-b border-cyan-500/10 bg-slate-900/40 z-10 shrink-0 flex justify-between items-center shadow-sm">
+      class="z-10 flex items-center justify-between px-6 py-4 border-b shadow-sm border-cyan-500/10 bg-slate-900/40 shrink-0">
       <div class="flex items-center gap-3">
         <div class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div>
         <h1 class="text-xl font-bold text-cyan-100 tracking-wide font-serif drop-shadow-[0_0_5px_rgba(34,211,238,0.3)]">
@@ -30,18 +30,18 @@
     </header>
 
     <main ref="chatWindow"
-      class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 custom-scrollbar relative bg-transparent scroll-smooth">
+      class="relative flex-1 p-4 space-y-6 overflow-y-auto bg-transparent md:p-8 custom-scrollbar scroll-smooth">
 
-      <div v-if="!hasStarted" class="flex flex-col items-center justify-center h-full space-y-12 fade-in pb-10">
+      <div v-if="!hasStarted" class="flex flex-col items-center justify-center h-full pb-10 space-y-12 fade-in">
         <div
-          class="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-md text-cyan-50 p-10 rounded-xl shadow-2xl border border-cyan-500/20 max-w-lg text-base leading-loose relative font-serif mx-4">
+          class="relative max-w-lg p-10 mx-4 font-serif text-base leading-loose border shadow-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-md text-cyan-50 rounded-xl border-cyan-500/20">
 
           <div
             class="mb-6 text-xs font-bold text-cyan-400 flex items-center justify-center gap-2 tracking-[0.2em] opacity-80">
             <span>INITIALIZING</span><span class="animate-pulse">...</span>
           </div>
 
-          <p class="text-center font-medium drop-shadow-sm text-lg">
+          <p class="text-lg font-medium text-center drop-shadow-sm">
             「叡智の探求者よ、こんにちは。<br>
             <span class="text-cyan-200">問答</span>を通じて、思考の深淵へ。<br>
             準備はよろしいかな？」
@@ -58,21 +58,21 @@
       </div>
 
       <div v-else-if="isCompleted"
-        class="flex flex-col items-center justify-center h-full space-y-8 fade-in text-center p-8 bg-slate-900/20 rounded-xl">
+        class="flex flex-col items-center justify-center h-full p-8 space-y-8 text-center fade-in bg-slate-900/20 rounded-xl">
         <div class="relative">
-          <div class="absolute inset-0 bg-cyan-400/20 blur-xl rounded-full animate-pulse"></div>
+          <div class="absolute inset-0 rounded-full bg-cyan-400/20 blur-xl animate-pulse"></div>
           <div class="text-7xl relative z-10 text-cyan-200 drop-shadow-[0_0_15px_rgba(34,211,238,0.8)]">✦</div>
         </div>
         <div>
-          <h2 class="text-4xl font-bold text-cyan-50 font-serif mb-4 tracking-wider">真理への到達</h2>
-          <p class="text-cyan-200/70 text-lg font-serif leading-relaxed">全問クリアしました。<br>あなたの探究心に敬意を表します。</p>
+          <h2 class="mb-4 font-serif text-4xl font-bold tracking-wider text-cyan-50">真理への到達</h2>
+          <p class="font-serif text-lg leading-relaxed text-cyan-200/70">全問クリアしました。<br>あなたの探究心に敬意を表します。</p>
         </div>
         <button @click="resetSession"
-          class="mt-8 px-8 py-3 rounded border border-cyan-500/30 text-cyan-400 hover:bg-cyan-900/30 hover:text-cyan-200 font-serif transition-all duration-300">システム再起動</button>
+          class="px-8 py-3 mt-8 font-serif transition-all duration-300 border rounded border-cyan-500/30 text-cyan-400 hover:bg-cyan-900/30 hover:text-cyan-200">システム再起動</button>
       </div>
 
       <template v-else>
-        <div v-for="(message, index) in history" :key="index" class="flex w-full fade-in group mb-4"
+        <div v-for="(message, index) in history" :key="index" class="flex w-full mb-4 fade-in group"
           :class="message.sender === 'user' ? 'justify-end' : 'justify-start'">
 
           <div :class="[
@@ -95,15 +95,15 @@
             ]" v-html="parseMarkdown(message.text)">
             </div>
 
-            <div v-if="message.choices && message.choices.length > 0 && message.type === 'question'"
-              class="mt-6 pt-4 border-t border-cyan-500/10 space-y-3">
+            <div v-if="!message.isTyping && message.choices && message.choices.length > 0 && message.type === 'question'"
+              class="pt-4 mt-6 space-y-3 border-t border-cyan-500/10 fade-in">
               <p class="text-[10px] font-sans tracking-widest text-cyan-500/60 text-center mb-2">- SELECTION -</p>
               <div class="grid gap-3">
                 <button v-for="choice in message.choices" :key="choice.id"
                   class="text-left text-sm bg-slate-900/40 hover:bg-cyan-900/30 px-5 py-4 rounded-lg border border-cyan-500/20 text-cyan-100 shadow-sm hover:border-cyan-400/50 hover:text-cyan-50 transition-all duration-200 group-hover:shadow-[0_0_10px_rgba(34,211,238,0.1)] font-serif relative overflow-hidden">
                   <span class="relative z-10">{{ choice.choice_text }}</span>
                   <div
-                    class="absolute inset-0 bg-cyan-400/5 opacity-0 hover:opacity-100 transition-opacity duration-300">
+                    class="absolute inset-0 transition-opacity duration-300 opacity-0 bg-cyan-400/5 hover:opacity-100">
                   </div>
                 </button>
               </div>
@@ -111,17 +111,17 @@
           </div>
         </div>
 
-        <div v-if="isSending || isLoading" class="flex justify-start fade-in pl-2">
+        <div v-if="isSending || isLoading" class="flex justify-start pl-2 fade-in">
           <div
-            class="flex items-center gap-2 text-cyan-500/70 text-xs font-mono tracking-widest bg-slate-900/50 px-4 py-2 rounded-full border border-cyan-500/10">
+            class="flex items-center gap-2 px-4 py-2 font-mono text-xs tracking-widest border rounded-full text-cyan-500/70 bg-slate-900/50 border-cyan-500/10">
             <span>THINKING</span>
-            <div class="typing-indicator scale-75"><span></span><span></span><span></span></div>
+            <div class="scale-75 typing-indicator"><span></span><span></span><span></span></div>
           </div>
         </div>
 
         <div v-if="error" class="flex justify-center my-4 fade-in">
           <div
-            class="bg-red-950/50 text-red-200 text-sm px-6 py-3 rounded-lg border border-red-500/30 shadow-lg flex items-center gap-3 font-serif backdrop-blur-md">
+            class="flex items-center gap-3 px-6 py-3 font-serif text-sm text-red-200 border rounded-lg shadow-lg bg-red-950/50 border-red-500/30 backdrop-blur-md">
             <svg class="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -134,10 +134,10 @@
     </main>
 
     <footer v-if="hasStarted && !isCompleted"
-      class="p-4 md:p-6 bg-slate-900/60 backdrop-blur-xl z-10 shrink-0 border-t border-cyan-500/10">
-      <div v-if="!isSufficient" class="fade-in w-full">
-        <div class="flex items-end space-x-3 relative max-w-3xl mx-auto">
-          <div class="flex-1 relative">
+      class="z-10 p-4 border-t md:p-6 bg-slate-900/60 backdrop-blur-xl shrink-0 border-cyan-500/10">
+      <div v-if="!isSufficient" class="w-full fade-in">
+        <div class="relative flex items-end max-w-3xl mx-auto space-x-3">
+          <div class="relative flex-1">
             <textarea
                 v-model="inputAnswer"
                 @keydown.enter="handleEnterKey"
@@ -172,16 +172,16 @@
                 <line x1="22" y1="2" x2="11" y2="13"></line>
                 <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
               </svg>
-              <div v-else class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              <div v-else class="w-5 h-5 border-2 rounded-full border-white/30 border-t-white animate-spin"></div>
             </button>
           </div>
         </div>
       </div>
-      <div v-else class="fade-in w-full max-w-md mx-auto">
+      <div v-else class="w-full max-w-md mx-auto fade-in">
         <button @click="handleNextTopic"
           class="w-full bg-cyan-900/40 text-cyan-50 font-serif font-bold py-4 px-6 rounded-xl hover:bg-cyan-800/60 active:scale-[0.99] focus:outline-none transition-all shadow-lg hover:shadow-[0_0_20px_rgba(34,211,238,0.2)] flex items-center justify-center space-x-3 text-lg border border-cyan-400/30 backdrop-blur-sm group">
           <span>次の問いへ進む</span>
-          <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24"
+          <svg class="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24"
             stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
           </svg>
@@ -215,6 +215,31 @@ const isSending = ref(false);
 const currentQuestionId = ref(null);
 const currentTopicId = ref(1);
 const nextTopicId = ref(null);
+const isTyping = ref(false); // グローバルなタイピング状態
+
+// タイプライター風表示関数
+const typeWriter = async (index, fullText, speed = 30) => {
+  isTyping.value = true;
+  history.value[index].isTyping = true;
+  history.value[index].text = ''; // 初期化
+
+  // 一文字ずつ追加
+  for (let i = 0; i < fullText.length; i++) {
+    history.value[index].text += fullText.charAt(i);
+    // スクロール追従（数文字に一回でも良いが、スムーズさ優先で毎回呼ぶ）
+    scrollToBottom();
+    // 待機 (句読点は少し長く)
+    let delay = speed;
+    const char = fullText.charAt(i);
+    if (char === '、' || char === ',') delay = speed * 2;
+    if (char === '。' || char === '.' || char === '！' || char === '？') delay = speed * 3;
+
+    await new Promise(r => setTimeout(r, delay));
+  }
+
+  history.value[index].isTyping = false;
+  isTyping.value = false;
+};
 
 const parseMarkdown = (text) => {
   if (text == null || typeof text !== 'string') {
@@ -283,7 +308,19 @@ const fetchNextQuestion = async () => {
     const data = response.data;
     currentQuestionId.value = data.id;
     nextTopicId.value = data.next_topic_id || null;
-    history.value.push({ sender: 'ai', type: 'question', text: data.question_text, question_id: data.id, choices: data.choices });
+
+    // ストリーミング表示のために空のテキストで追加
+    history.value.push({
+      sender: 'ai',
+      type: 'question',
+      text: '',
+      question_id: data.id,
+      choices: data.choices,
+      isTyping: true
+    });
+
+    // タイピング開始
+    await typeWriter(history.value.length - 1, data.question_text);
   } catch (err) {
     if (err.response && err.response.status === 404) {
       isCompleted.value = true;
@@ -311,7 +348,19 @@ const handleSend = async () => {
     const API_URL = `/api/questions/${currentQuestionId.value}/check`;
     const response = await axios.post(API_URL, { answer_text: text });
     const data = response.data;
-    history.value.push({ sender: 'ai', type: 'feedback', text: data.explanation, question_id: currentQuestionId.value, is_correct: data.is_correct });
+
+    // フィードバックもストリーミング表示
+    history.value.push({
+      sender: 'ai',
+      type: 'feedback',
+      text: '',
+      question_id: currentQuestionId.value,
+      is_correct: data.is_correct,
+      isTyping: true
+    });
+
+    await typeWriter(history.value.length - 1, data.explanation);
+
     if (data.is_sufficient === true || (data.explanation && data.explanation.includes('[CORRECT]'))) {
       isSufficient.value = true;
     }
