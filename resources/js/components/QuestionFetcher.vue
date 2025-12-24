@@ -1,6 +1,6 @@
 <template>
   <div
-    class="w-full max-w-4xl h-[80vh] md:h-[85vh] bg-slate-900/70 backdrop-blur-xl rounded-2xl shadow-[0_0_50px_rgba(6,182,212,0.1)] flex flex-col overflow-hidden relative border border-cyan-500/20 z-10 transition-all duration-500 ring-1 ring-white/5">
+    class="w-full max-w-4xl h-[80dvh] md:h-[85vh] bg-slate-900/70 backdrop-blur-xl rounded-2xl shadow-[0_0_50px_rgba(6,182,212,0.1)] flex flex-col overflow-hidden relative border border-cyan-500/20 z-10 transition-all duration-500 ring-1 ring-white/5">
 
     <div
       class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 rounded-tl-lg pointer-events-none border-cyan-500/30">
@@ -75,6 +75,7 @@
         <div v-for="(message, index) in history" :key="index" class="flex w-full mb-4 fade-in group"
           :class="message.sender === 'user' ? 'justify-end' : 'justify-start'">
 
+          <!-- Message Bubble -->
           <div :class="[
             'p-5 md:p-6 max-w-[90%] md:max-w-[85%] text-[15px] md:text-base leading-relaxed shadow-md relative backdrop-blur-sm border',
             message.sender === 'user'
@@ -100,7 +101,9 @@
               <p class="text-[10px] font-sans tracking-widest text-cyan-500/60 text-center mb-2">- SELECTION -</p>
               <div class="grid gap-3">
                 <button v-for="choice in message.choices" :key="choice.id"
-                  class="text-left text-sm bg-slate-900/40 hover:bg-cyan-900/30 px-5 py-4 rounded-lg border border-cyan-500/20 text-cyan-100 shadow-sm hover:border-cyan-400/50 hover:text-cyan-50 transition-all duration-200 group-hover:shadow-[0_0_10px_rgba(34,211,238,0.1)] font-serif relative overflow-hidden">
+                  @click="selectChoice(choice.choice_text)"
+                  :disabled="isSending || isLoading || isTyping"
+                  class="text-left text-sm bg-slate-900/40 hover:bg-cyan-900/30 px-5 py-4 rounded-lg border border-cyan-500/20 text-cyan-100 shadow-sm hover:border-cyan-400/50 hover:text-cyan-50 transition-all duration-200 group-hover:shadow-[0_0_10px_rgba(34,211,238,0.1)] font-serif relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed">
                   <span class="relative z-10">{{ choice.choice_text }}</span>
                   <div
                     class="absolute inset-0 transition-opacity duration-300 opacity-0 bg-cyan-400/5 hover:opacity-100">
@@ -156,12 +159,12 @@
 
           <div class="flex gap-2">
             <button @click="askOracle" :disabled="isSending || isLoading || !currentQuestionId"
-              class="w-14 h-[56px] flex items-center justify-center bg-amber-600/20 text-amber-200 rounded-xl hover:bg-amber-600/40 border border-amber-500/30 active:scale-95 transition-all shadow-lg hover:shadow-[0_0_15px_rgba(245,158,11,0.2)] disabled:opacity-30 disabled:cursor-not-allowed backdrop-blur-sm group relative overflow-hidden"
+              class="w-14 h-[56px] flex items-center justify-center bg-amber-900/30 text-amber-200 rounded-xl hover:bg-amber-800/50 border border-amber-500/30 active:scale-95 transition-all shadow-lg hover:shadow-[0_0_15px_rgba(245,158,11,0.2)] disabled:opacity-30 disabled:cursor-not-allowed backdrop-blur-sm group relative overflow-hidden"
               title="オラクル（ヒント）">
-              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path
-                  d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-1 1.5-2 1.5-3.5a6 6 0 0 0-11 0c0 1.5.5 2.5 1.5 3.5.8.8 1.3 1.5 1.5 2.5"></path>
+                <line x1="9" y1="18" x2="15" y2="18"></line>
+                <line x1="10" y1="22" x2="14" y2="22"></line>
               </svg>
             </button>
             <button @click="handleSend" :disabled="isSending || !inputAnswer.trim() || !currentQuestionId"
@@ -226,8 +229,8 @@ const typeWriter = async (index, fullText, speed = 30) => {
   // 一文字ずつ追加
   for (let i = 0; i < fullText.length; i++) {
     history.value[index].text += fullText.charAt(i);
-    // スクロール追従（数文字に一回でも良いが、スムーズさ優先で毎回呼ぶ）
-    scrollToBottom();
+    // スクロール追従（タイピング中は瞬時にスクロールしてカクつきを防ぐ）
+    scrollToBottom({ behavior: 'auto' });
     // 待機 (句読点は少し長く)
     let delay = speed;
     const char = fullText.charAt(i);
@@ -281,10 +284,17 @@ const handleNextTopic = async () => {
   await fetchNextQuestion();
 };
 
-const scrollToBottom = () => {
+const scrollToBottom = (options = {}) => {
+  const { behavior = 'smooth', force = false } = options;
   nextTick(() => {
     if (chatWindow.value) {
-      chatWindow.value.scrollTo({ top: chatWindow.value.scrollHeight, behavior: 'smooth' });
+      const el = chatWindow.value;
+      // ユーザーが少し上にスクロールしている場合は、勝手にスクロールしない (forceがtrueの時は除く)
+      const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+
+      if (force || isNearBottom) {
+        el.scrollTo({ top: el.scrollHeight, behavior: behavior });
+      }
     }
   });
 };
@@ -300,7 +310,7 @@ const resizeTextarea = () => {
 const fetchNextQuestion = async () => {
   isLoading.value = true;
   error.value = null;
-  scrollToBottom();
+  scrollToBottom({ force: true });
   try {
     // 先頭の http://localhost を消して / から始める
     const API_URL = `/api/topics/${currentTopicId.value}/next-question`;
@@ -330,7 +340,7 @@ const fetchNextQuestion = async () => {
     }
   } finally {
     isLoading.value = false;
-    scrollToBottom();
+    scrollToBottom({ force: true });
   }
 };
 
@@ -342,7 +352,7 @@ const handleSend = async () => {
   isSending.value = true;
   error.value = null;
   history.value.push({ sender: 'user', type: 'answer', text: text, question_id: currentQuestionId.value });
-  scrollToBottom();
+  scrollToBottom({ force: true });
   try {
     // 先頭の http://localhost を消して / から始める
     const API_URL = `/api/questions/${currentQuestionId.value}/check`;
@@ -369,7 +379,7 @@ const handleSend = async () => {
     error.value = { message: '通信エラーが発生しました。' };
   } finally {
     isSending.value = false;
-    scrollToBottom();
+    scrollToBottom({ force: true });
   }
 };
 
@@ -393,6 +403,12 @@ const handleEnterKey = (e) => {
   // それ以外（変換中でもなく、Shiftも押していないEnter）なら送信
   e.preventDefault(); // 改行が入らないように止める
   handleSend();       // 送信実行
+};
+
+const selectChoice = (text) => {
+  if (isSending.value || isLoading.value || isTyping.value) return;
+  inputAnswer.value = text;
+  handleSend();
 };
 </script>
 
