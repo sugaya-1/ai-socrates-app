@@ -2,18 +2,11 @@
   <div
     class="w-full max-w-4xl h-[80dvh] md:h-[85vh] bg-slate-900/70 backdrop-blur-xl rounded-2xl shadow-[0_0_50px_rgba(6,182,212,0.1)] flex flex-col overflow-hidden relative border border-cyan-500/20 z-10 transition-all duration-500 ring-1 ring-white/5">
 
-    <div
-      class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 rounded-tl-lg pointer-events-none border-cyan-500/30">
-    </div>
-    <div
-      class="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 rounded-tr-lg pointer-events-none border-cyan-500/30">
-    </div>
-    <div
-      class="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 rounded-bl-lg pointer-events-none border-cyan-500/30">
-    </div>
-    <div
-      class="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 rounded-br-lg pointer-events-none border-cyan-500/30">
-    </div>
+    <!-- Decorative Corners -->
+    <div class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 rounded-tl-lg pointer-events-none border-cyan-500/30"></div>
+    <div class="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 rounded-tr-lg pointer-events-none border-cyan-500/30"></div>
+    <div class="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 rounded-bl-lg pointer-events-none border-cyan-500/30"></div>
+    <div class="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 rounded-br-lg pointer-events-none border-cyan-500/30"></div>
 
     <header
       class="z-10 flex items-center justify-between px-6 py-4 border-b shadow-sm border-cyan-500/10 bg-slate-900/40 shrink-0">
@@ -32,88 +25,35 @@
     <main ref="chatWindow"
       class="relative flex-1 p-4 space-y-6 overflow-y-auto bg-transparent md:p-8 custom-scrollbar scroll-smooth">
 
-      <div v-if="!hasStarted" class="flex flex-col items-center justify-center h-full pb-10 space-y-12 fade-in">
-        <div
-          class="relative max-w-lg p-10 mx-4 font-serif text-base leading-loose border shadow-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-md text-cyan-50 rounded-xl border-cyan-500/20">
+      <!-- Component Switching Logic -->
+      <TerminalLanding
+        v-if="showLanding"
+        :visible="showLanding"
+        @complete="handleBootComplete"
+      />
 
-          <div
-            class="mb-6 text-xs font-bold text-cyan-400 flex items-center justify-center gap-2 tracking-[0.2em] opacity-80">
-            <span>INITIALIZING</span><span class="animate-pulse">...</span>
-          </div>
+      <StartScreen
+        v-else-if="!hasStarted"
+        @start="startSession"
+      />
 
-          <p class="text-lg font-medium text-center drop-shadow-sm">
-            「叡智の探求者よ、こんにちは。<br>
-            <span class="text-cyan-200">問答</span>を通じて、思考の深淵へ。<br>
-            準備はよろしいかな？」
-          </p>
-        </div>
+      <CompletionScreen
+        v-else-if="isCompleted"
+        @reset="resetSession"
+      />
 
-        <button @click="startSession"
-          class="group relative bg-cyan-950/60 text-cyan-100 text-lg font-serif font-bold py-4 px-16 rounded-full overflow-hidden border border-cyan-400/30 transition-all duration-300 hover:bg-cyan-900/80 hover:border-cyan-400/80 hover:shadow-[0_0_30px_rgba(34,211,238,0.2)] hover:-translate-y-1">
-          <span class="relative z-10 tracking-widest">対話を始める</span>
-          <div
-            class="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent z-0">
-          </div>
-        </button>
-      </div>
-
-      <div v-else-if="isCompleted"
-        class="flex flex-col items-center justify-center h-full p-8 space-y-8 text-center fade-in bg-slate-900/20 rounded-xl">
-        <div class="relative">
-          <div class="absolute inset-0 rounded-full bg-cyan-400/20 blur-xl animate-pulse"></div>
-          <div class="text-7xl relative z-10 text-cyan-200 drop-shadow-[0_0_15px_rgba(34,211,238,0.8)]">✦</div>
-        </div>
-        <div>
-          <h2 class="mb-4 font-serif text-4xl font-bold tracking-wider text-cyan-50">真理への到達</h2>
-          <p class="font-serif text-lg leading-relaxed text-cyan-200/70">全問クリアしました。<br>あなたの探究心に敬意を表します。</p>
-        </div>
-        <button @click="resetSession"
-          class="px-8 py-3 mt-8 font-serif transition-all duration-300 border rounded border-cyan-500/30 text-cyan-400 hover:bg-cyan-900/30 hover:text-cyan-200">システム再起動</button>
-      </div>
-
+      <!-- Chat History -->
       <template v-else>
-        <div v-for="(message, index) in history" :key="index" class="flex w-full mb-4 fade-in group"
-          :class="message.sender === 'user' ? 'justify-end' : 'justify-start'">
+        <ChatMessage
+          v-for="(message, index) in history"
+          :key="index"
+          :message="message"
+          :disabled="isSending || isLoading || isTyping"
+          :focused-index="index === history.length - 1 && message.sender === 'ai' ? focusedChoiceIndex : -1"
+          @select="selectChoice"
+        />
 
-          <!-- Message Bubble -->
-          <div :class="[
-            'p-5 md:p-6 max-w-[90%] md:max-w-[85%] text-[15px] md:text-base leading-relaxed shadow-md relative backdrop-blur-sm border',
-            message.sender === 'user'
-              ? 'bg-cyan-950/40 text-cyan-50 rounded-2xl rounded-tr-sm border-cyan-500/30 shadow-[0_4px_20px_rgba(6,182,212,0.05)]'
-              : 'bg-slate-800/80 text-cyan-100 rounded-2xl rounded-tl-sm border-slate-700/50 shadow-lg'
-          ]">
-            <div v-if="message.sender === 'ai'"
-              class="mb-3 text-[10px] font-bold text-cyan-500/80 flex items-center gap-2 select-none font-sans tracking-widest border-b border-white/5 pb-2">
-              <div class="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
-              <span v-if="message.type === 'question'">QUESTION</span>
-              <span v-else>SOCRATES AI</span>
-            </div>
-
-            <div class="break-words" :class="[
-              message.sender === 'ai'
-                ? 'prose prose-invert prose-p:text-cyan-50/90 prose-strong:text-cyan-300 prose-headings:text-cyan-200 prose-a:text-cyan-400 max-w-none prose-p:font-serif prose-headings:font-serif'
-                : 'whitespace-pre-wrap font-sans text-cyan-50/95'
-            ]" v-html="parseMarkdown(message.text)">
-            </div>
-
-            <div v-if="!message.isTyping && message.choices && message.choices.length > 0 && message.type === 'question'"
-              class="pt-4 mt-6 space-y-3 border-t border-cyan-500/10 fade-in">
-              <p class="text-[10px] font-sans tracking-widest text-cyan-500/60 text-center mb-2">- SELECTION -</p>
-              <div class="grid gap-3">
-                <button v-for="choice in message.choices" :key="choice.id"
-                  @click="selectChoice(choice.choice_text)"
-                  :disabled="isSending || isLoading || isTyping"
-                  class="text-left text-sm bg-slate-900/40 hover:bg-cyan-900/30 px-5 py-4 rounded-lg border border-cyan-500/20 text-cyan-100 shadow-sm hover:border-cyan-400/50 hover:text-cyan-50 transition-all duration-200 group-hover:shadow-[0_0_10px_rgba(34,211,238,0.1)] font-serif relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed">
-                  <span class="relative z-10">{{ choice.choice_text }}</span>
-                  <div
-                    class="absolute inset-0 transition-opacity duration-300 opacity-0 bg-cyan-400/5 hover:opacity-100">
-                  </div>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
+        <!-- Typing Indicator (Thinking) -->
         <div v-if="isSending || isLoading" class="flex justify-start pl-2 fade-in">
           <div
             class="flex items-center gap-2 px-4 py-2 font-mono text-xs tracking-widest border rounded-full text-cyan-500/70 bg-slate-900/50 border-cyan-500/10">
@@ -122,9 +62,11 @@
           </div>
         </div>
 
+        <!-- Error Message -->
         <div v-if="error" class="flex justify-center my-4 fade-in">
           <div
             class="flex items-center gap-3 px-6 py-3 font-serif text-sm text-red-200 border rounded-lg shadow-lg bg-red-950/50 border-red-500/30 backdrop-blur-md">
+            <!-- Icon SVG -->
             <svg class="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -158,6 +100,7 @@
           </div>
 
           <div class="flex gap-2">
+            <!-- Hint Button -->
             <button @click="askOracle" :disabled="isSending || isLoading || !currentQuestionId"
               class="w-14 h-[56px] flex items-center justify-center bg-amber-900/30 text-amber-200 rounded-xl hover:bg-amber-800/50 border border-amber-500/30 active:scale-95 transition-all shadow-lg hover:shadow-[0_0_15px_rgba(245,158,11,0.2)] disabled:opacity-30 disabled:cursor-not-allowed backdrop-blur-sm group relative overflow-hidden"
               title="オラクル（ヒント）">
@@ -167,6 +110,15 @@
                 <line x1="10" y1="22" x2="14" y2="22"></line>
               </svg>
             </button>
+            <!-- Skip Button -->
+            <button @click="handleNextTopic" :disabled="isSending || isLoading || !currentQuestionId"
+              class="w-14 h-[56px] flex items-center justify-center bg-slate-700/50 text-slate-300 rounded-xl hover:bg-slate-600/70 border border-slate-500/30 active:scale-95 transition-all shadow-lg hover:shadow-[0_0_15px_rgba(148,163,184,0.2)] disabled:opacity-30 disabled:cursor-not-allowed backdrop-blur-sm group relative overflow-hidden"
+              title="別の話題へ（スキップ）">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h13M12 5l7 7-7 7"/>
+              </svg>
+            </button>
+             <!-- Send Button -->
             <button @click="handleSend" :disabled="isSending || !inputAnswer.trim() || !currentQuestionId"
               class="w-14 h-[56px] flex items-center justify-center bg-cyan-600 text-white rounded-xl hover:bg-cyan-500 active:scale-95 transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_25px_rgba(6,182,212,0.6)] disabled:opacity-30 disabled:cursor-not-allowed border border-cyan-400/20"
               title="送信">
@@ -195,18 +147,17 @@
 </template>
 
 <script setup>
-// スクリプト部分はロジック変更なしなので、元のまま維持してください。
-// インポート文などはそのまま利用可能です。
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, onMounted, onUnmounted, watch } from 'vue';
 import axios from 'axios';
-import { marked } from 'marked';
-
-// ... (以下、元のscript内容をそのままペーストしてください)
-// ※機能変更禁止の要望に従い、JSロジックは一切触りません。
-//   ただし、classの微調整に合わせてtemplate内は上記のように書き換えてください。
+// Removed 'marked' import as parsing is now in ChatMessage.vue
+import TerminalLanding from './TerminalLanding.vue';
+import StartScreen from './StartScreen.vue';
+import CompletionScreen from './CompletionScreen.vue';
+import ChatMessage from './ChatMessage.vue';
 
 const chatWindow = ref(null);
 const textareaRef = ref(null);
+const showLanding = ref(true);
 const hasStarted = ref(false);
 const isSufficient = ref(false);
 const isCompleted = ref(false);
@@ -218,22 +169,34 @@ const isSending = ref(false);
 const currentQuestionId = ref(null);
 const currentTopicId = ref(1);
 const nextTopicId = ref(null);
-const isTyping = ref(false); // グローバルなタイピング状態
+const isTyping = ref(false);
+const focusedChoiceIndex = ref(-1);
 
-// タイプライター風表示関数
+const handleBootComplete = () => {
+    showLanding.value = false;
+};
+
+watch(history, () => {
+    focusedChoiceIndex.value = -1;
+}, { deep: true });
+
+onMounted(() => {
+    window.addEventListener('keydown', handleKeydown);
+});
+
+// Typewriter effect updates the text property of the message in history
+// ChatMessage.vue reactively renders this text
 const typeWriter = async (index, fullText, speed = 30) => {
   isTyping.value = true;
   history.value[index].isTyping = true;
-  history.value[index].text = ''; // 初期化
+  history.value[index].text = '';
 
-  // 一文字ずつ追加
   for (let i = 0; i < fullText.length; i++) {
     history.value[index].text += fullText.charAt(i);
-    // スクロール追従（タイピング中は瞬時にスクロールしてカクつきを防ぐ）
     scrollToBottom({ behavior: 'auto' });
-    // 待機 (句読点は少し長く)
     let delay = speed;
     const char = fullText.charAt(i);
+    // Punctuation delay for natural feeling
     if (char === '、' || char === ',') delay = speed * 2;
     if (char === '。' || char === '.' || char === '！' || char === '？') delay = speed * 3;
 
@@ -244,25 +207,7 @@ const typeWriter = async (index, fullText, speed = 30) => {
   isTyping.value = false;
 };
 
-const parseMarkdown = (text) => {
-  if (text == null || typeof text !== 'string') {
-    return '';
-  }
-
-  try {
-    let cleanText = text;
-    cleanText = cleanText.replace(/\\(\*)/g, '$1');
-
-    // サイバー感のある発光する青に変更
-    cleanText = cleanText.replace(/\*\*\s*(.*?)\s*\*\*/g, '<strong class="text-cyan-300 font-bold drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]">$1</strong>');
-
-    return marked.parse(cleanText);
-
-  } catch (e) {
-    console.error("Markdown変換エラー:", e);
-    return text;
-  }
-};
+// parseMarkdown function removed - handled inside ChatMessage.vue
 
 const startSession = async () => {
   hasStarted.value = true;
@@ -289,7 +234,6 @@ const scrollToBottom = (options = {}) => {
   nextTick(() => {
     if (chatWindow.value) {
       const el = chatWindow.value;
-      // ユーザーが少し上にスクロールしている場合は、勝手にスクロールしない (forceがtrueの時は除く)
       const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
 
       if (force || isNearBottom) {
@@ -312,14 +256,12 @@ const fetchNextQuestion = async () => {
   error.value = null;
   scrollToBottom({ force: true });
   try {
-    // 先頭の http://localhost を消して / から始める
     const API_URL = `/api/topics/${currentTopicId.value}/next-question`;
     const response = await axios.get(API_URL);
     const data = response.data;
     currentQuestionId.value = data.id;
     nextTopicId.value = data.next_topic_id || null;
 
-    // ストリーミング表示のために空のテキストで追加
     history.value.push({
       sender: 'ai',
       type: 'question',
@@ -329,7 +271,6 @@ const fetchNextQuestion = async () => {
       isTyping: true
     });
 
-    // タイピング開始
     await typeWriter(history.value.length - 1, data.question_text);
   } catch (err) {
     if (err.response && err.response.status === 404) {
@@ -354,12 +295,10 @@ const handleSend = async () => {
   history.value.push({ sender: 'user', type: 'answer', text: text, question_id: currentQuestionId.value });
   scrollToBottom({ force: true });
   try {
-    // 先頭の http://localhost を消して / から始める
     const API_URL = `/api/questions/${currentQuestionId.value}/check`;
     const response = await axios.post(API_URL, { answer_text: text });
     const data = response.data;
 
-    // フィードバックもストリーミング表示
     history.value.push({
       sender: 'ai',
       type: 'feedback',
@@ -389,20 +328,14 @@ const askOracle = () => {
 };
 
 const handleEnterKey = (e) => {
-  // 【最重要】IME変換中（日本語入力中）なら何もしない
-  // これがないと、漢字変換の確定エンターで送信されてしまいます
   if (e.isComposing || e.keyCode === 229) {
     return;
   }
-
-  // Shiftキーが押されているなら、通常の「改行」動作をさせる
   if (e.shiftKey) {
-    return; // 何もしない＝ブラウザ標準の改行が入る
+    return;
   }
-
-  // それ以外（変換中でもなく、Shiftも押していないEnter）なら送信
-  e.preventDefault(); // 改行が入らないように止める
-  handleSend();       // 送信実行
+  e.preventDefault();
+  handleSend();
 };
 
 const selectChoice = (text) => {
@@ -410,10 +343,47 @@ const selectChoice = (text) => {
   inputAnswer.value = text;
   handleSend();
 };
+
+const handleKeydown = (e) => {
+  if (isSending.value || isLoading.value || isTyping.value) return;
+
+  const lastMessage = history.value[history.value.length - 1];
+
+  if (!lastMessage || lastMessage.sender !== 'ai' || !lastMessage.choices || lastMessage.choices.length === 0) return;
+
+  const choicesCount = lastMessage.choices.length;
+
+  if (e.key >= '1' && e.key <= '9') {
+      const index = parseInt(e.key) - 1;
+      if (index < choicesCount) {
+          e.preventDefault();
+          selectChoice(lastMessage.choices[index].choice_text);
+      }
+      return;
+  }
+
+  if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      focusedChoiceIndex.value = (focusedChoiceIndex.value + 1) % choicesCount;
+  } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      focusedChoiceIndex.value = (focusedChoiceIndex.value - 1 + choicesCount) % choicesCount;
+  }
+
+  if (e.key === 'Enter') {
+     if (document.activeElement !== textareaRef.value && focusedChoiceIndex.value !== -1) {
+         e.preventDefault();
+         selectChoice(lastMessage.choices[focusedChoiceIndex.value].choice_text);
+     }
+  }
+};
+
+onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeydown);
+});
 </script>
 
 <style scoped>
-/* スタイルも基本維持ですが、スクロールバー等は調整しています */
 @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700&display=swap');
 
 .font-serif {
@@ -422,7 +392,6 @@ const selectChoice = (text) => {
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
-  /* 少し細くして上品に */
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -443,15 +412,8 @@ const selectChoice = (text) => {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .typing-indicator {
@@ -478,25 +440,7 @@ const selectChoice = (text) => {
 }
 
 @keyframes bounce {
-
-  0%,
-  80%,
-  100% {
-    transform: scale(0);
-  }
-
-  40% {
-    transform: scale(1.0);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    transform: translateX(-150%) skewX(-15deg);
-  }
-
-  100% {
-    transform: translateX(150%) skewX(-15deg);
-  }
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1.0); }
 }
 </style>
