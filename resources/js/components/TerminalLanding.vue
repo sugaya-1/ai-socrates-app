@@ -36,7 +36,8 @@
 
     <!-- Skip Prompt -->
     <div class="relative z-30 text-center w-full pb-10 opacity-50 text-[10px] uppercase tracking-[0.3em] animate-pulse">
-        Press Enter or Click to Skip Initialization
+        <span v-if="!bootFinished">Press Enter to Skip Initialization</span>
+        <span v-else class="font-bold text-cyan-400">Press Enter to Initialize Interface</span>
     </div>
   </div>
 </template>
@@ -91,9 +92,7 @@ const runBootSequence = async () => {
 
   if (!bootFinished.value) {
     bootFinished.value = true;
-    setTimeout(() => {
-      emit('complete');
-    }, 800);
+    // Auto-complete removed. Waiting for user input.
   }
 };
 
