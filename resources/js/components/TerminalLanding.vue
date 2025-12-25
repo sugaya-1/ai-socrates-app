@@ -97,17 +97,32 @@ const runBootSequence = async () => {
 };
 
 const fastForward = () => {
-  if (bootFinished.value) return;
-
-  // Clear any existing timeout
+  // Always clear timeout first
   if (bootTimeout) clearTimeout(bootTimeout);
 
-  // Show all logs immediately
+  // If already finished, just proceed
+  if (bootFinished.value) {
+      emit('complete');
+      return;
+  }
+
+  // Otherwise, fast-forward animation visually first
   bootLogs.value = sequence;
   bootFinished.value = true;
+  // If skipping animation, we might want to wait a split second or just proceed?
+  // Let's force them to click one more time to proceed if they skipped?
+  // No, original behavior was "Skip" -> "Go".
+  // But now we want "Wait" -> "Go".
 
-  // Emit complete immediately
-  emit('complete');
+  // Actually, if they press Skip DURING animation, it should just show all text and Wait.
+  // Then next click proceeds.
+  // OR, should skip jump straight to app?
+  // User said "Skip initialization".
+
+  // Let's make "Skip" just finish the text, and REQUIRE a second click to start.
+  // Refined Logic:
+  // 1. If animating: Finish text, set bootFinished = true. (Do NOT emit complete yet).
+  // 2. If finished: Emit complete.
 };
 
 const handleKeydown = (e) => {
