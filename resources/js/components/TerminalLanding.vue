@@ -2,22 +2,23 @@
   <!-- Full Screen Terminal Overlay -->
   <div v-if="visible"
         @click="fastForward"
-        class="fixed inset-0 z-50 flex flex-col items-start justify-end p-4 overflow-hidden font-mono text-green-500 bg-black cursor-pointer select-none md:p-10">
+        class="fixed inset-0 z-50 flex flex-col items-start justify-end p-4 overflow-hidden font-mono text-green-500 bg-black cursor-pointer select-none md:p-10"
+        :class="{ 'crt-shutdown': isShuttingDown }">
 
     <!-- Background Effects Container -->
     <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
       <!-- CRT Scanlines -->
-      <div class="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,6px_100%] z-10 opacity-60"></div>
+      <div class="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,6px_100%] z-40 opacity-60"></div>
 
       <!-- CRT Vignette (Dark corners) -->
-      <div class="absolute inset-0 z-20 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_50%,rgba(0,0,0,0.8)_100%)]"></div>
+      <div class="absolute inset-0 z-50 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_50%,rgba(0,0,0,0.8)_100%)]"></div>
 
       <!-- Noise Overlay (Horizontal Lines) -->
-      <div class="absolute -inset-[100%] z-0 pointer-events-none opacity-[0.08] brightness-125 animate-noise-strong mix-blend-screen noise-bg">
+      <div class="absolute -inset-[100%] z-40 pointer-events-none opacity-[0.08] brightness-125 animate-noise-strong mix-blend-screen noise-bg">
       </div>
 
       <!-- Scanlines (Stronger) -->
-      <div class="absolute inset-0 z-10 w-full h-full bg-repeat-y pointer-events-none opacity-10 animate-scanline"
+      <div class="absolute inset-0 z-40 w-full h-full bg-repeat-y pointer-events-none opacity-10 animate-scanline"
             style="background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.5) 51%); background-size: 100% 4px;">
       </div>
     </div>
@@ -56,6 +57,7 @@ const emit = defineEmits(['complete']);
 
 const bootLogs = ref([]);
 const bootFinished = ref(false);
+const isShuttingDown = ref(false);
 let bootTimeout = null;
 
 // The boot sequence text
@@ -96,13 +98,20 @@ const runBootSequence = async () => {
   }
 };
 
+const startShutdown = () => {
+    isShuttingDown.value = true;
+    setTimeout(() => {
+        emit('complete');
+    }, 1200); // Slower animation
+};
+
 const fastForward = () => {
   // Always clear timeout first
   if (bootTimeout) clearTimeout(bootTimeout);
 
   // If already finished, just proceed
   if (bootFinished.value) {
-      emit('complete');
+      if (!isShuttingDown.value) startShutdown();
       return;
   }
 
@@ -146,8 +155,21 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+
+
 .noise-bg {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='lineNoise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.002 0.5' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23lineNoise)'/%3E%3C/svg%3E");
+}
+
+/* CRT Turn Off Animation */
+.crt-shutdown {
+    animation: turn-off 1.2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+@keyframes turn-off {
+    0% { transform: scale(1, 1.3) translate3d(0, 0, 0); filter: brightness(1); opacity: 1; }
+    60% { transform: scale(1, 0.001) translate3d(0, 0, 0); filter: brightness(10); }
+    100% { transform: scale(0, 0.001) translate3d(0, 0, 0); filter: brightness(0); opacity: 0; }
 }
 
 @keyframes noise-strong {
