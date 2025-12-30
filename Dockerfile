@@ -36,4 +36,4 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
 
 # 7. 起動コマンド（DBの箱作りをしてからサーバーを起動）
 # ※ 今回は問題を6問に厳選してリセットするため、migrate:fresh --seed を実行します
-CMD php artisan migrate:fresh --seed --force && apache2-foreground
+CMD php artisan migrate --force && apache2-foreground
